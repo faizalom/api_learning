@@ -12,7 +12,13 @@ service MessageBroker {
 
 message Message {
   string topic = 1;
-  string payload = 2;
+  optional string eventId = 2;
+  oneof content {
+    string text = 3; // For text-based messages
+    bytes binary = 4; // For binary-based messages
+  }
+  string senderId = 5;
+  int64 timestamp = 6
 }
 
 message SubscriptionRequest {
