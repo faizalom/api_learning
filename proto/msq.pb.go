@@ -23,9 +23,16 @@ const (
 )
 
 type Message struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Topic         string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
-	Payload       string                 `protobuf:"bytes,2,opt,name=payload,proto3" json:"payload,omitempty"`
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Topic   string                 `protobuf:"bytes,1,opt,name=topic,proto3" json:"topic,omitempty"`
+	EventId *string                `protobuf:"bytes,2,opt,name=eventId,proto3,oneof" json:"eventId,omitempty"`
+	// Types that are valid to be assigned to Content:
+	//
+	//	*Message_Text
+	//	*Message_Binary
+	Content       isMessage_Content `protobuf_oneof:"content"`
+	SenderId      string            `protobuf:"bytes,5,opt,name=senderId,proto3" json:"senderId,omitempty"`
+	Timestamp     int64             `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -67,12 +74,67 @@ func (x *Message) GetTopic() string {
 	return ""
 }
 
-func (x *Message) GetPayload() string {
-	if x != nil {
-		return x.Payload
+func (x *Message) GetEventId() string {
+	if x != nil && x.EventId != nil {
+		return *x.EventId
 	}
 	return ""
 }
+
+func (x *Message) GetContent() isMessage_Content {
+	if x != nil {
+		return x.Content
+	}
+	return nil
+}
+
+func (x *Message) GetText() string {
+	if x != nil {
+		if x, ok := x.Content.(*Message_Text); ok {
+			return x.Text
+		}
+	}
+	return ""
+}
+
+func (x *Message) GetBinary() []byte {
+	if x != nil {
+		if x, ok := x.Content.(*Message_Binary); ok {
+			return x.Binary
+		}
+	}
+	return nil
+}
+
+func (x *Message) GetSenderId() string {
+	if x != nil {
+		return x.SenderId
+	}
+	return ""
+}
+
+func (x *Message) GetTimestamp() int64 {
+	if x != nil {
+		return x.Timestamp
+	}
+	return 0
+}
+
+type isMessage_Content interface {
+	isMessage_Content()
+}
+
+type Message_Text struct {
+	Text string `protobuf:"bytes,3,opt,name=text,proto3,oneof"` // For text-based messages
+}
+
+type Message_Binary struct {
+	Binary []byte `protobuf:"bytes,4,opt,name=binary,proto3,oneof"` // For binary-based messages
+}
+
+func (*Message_Text) isMessage_Content() {}
+
+func (*Message_Binary) isMessage_Content() {}
 
 type SubscriptionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -262,10 +324,17 @@ var File_msq_proto_msq_proto protoreflect.FileDescriptor
 
 const file_msq_proto_msq_proto_rawDesc = "" +
 	"\n" +
-	"\x13msq/proto/msq.proto\x1a\x1bgoogle/protobuf/empty.proto\"9\n" +
+	"\x13msq/proto/msq.proto\x1a\x1bgoogle/protobuf/empty.proto\"\xbf\x01\n" +
 	"\aMessage\x12\x14\n" +
-	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x18\n" +
-	"\apayload\x18\x02 \x01(\tR\apayload\"+\n" +
+	"\x05topic\x18\x01 \x01(\tR\x05topic\x12\x1d\n" +
+	"\aeventId\x18\x02 \x01(\tH\x01R\aeventId\x88\x01\x01\x12\x14\n" +
+	"\x04text\x18\x03 \x01(\tH\x00R\x04text\x12\x18\n" +
+	"\x06binary\x18\x04 \x01(\fH\x00R\x06binary\x12\x1a\n" +
+	"\bsenderId\x18\x05 \x01(\tR\bsenderId\x12\x1c\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestampB\t\n" +
+	"\acontentB\n" +
+	"\n" +
+	"\b_eventId\"+\n" +
 	"\x13SubscriptionRequest\x12\x14\n" +
 	"\x05topic\x18\x01 \x01(\tR\x05topic\"$\n" +
 	"\bResponse\x12\x18\n" +
@@ -322,6 +391,10 @@ func init() { file_msq_proto_msq_proto_init() }
 func file_msq_proto_msq_proto_init() {
 	if File_msq_proto_msq_proto != nil {
 		return
+	}
+	file_msq_proto_msq_proto_msgTypes[0].OneofWrappers = []any{
+		(*Message_Text)(nil),
+		(*Message_Binary)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
